@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'idea'
+    id 'ca.coglinc2.javacc' version '3.0.0'
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'https://repo.maven.apache.org/maven2'
+    }
+    flatDir {
+    	dirs "C:/Program Files/AdoptOpenJDK/jdk-8.0.242.08-hotspot/lib", 'libs'
+    }
+}
+
+dependencies {
+    implementation name: 'javassist' //'org.javassist:javassist:3.26.0-GA'
+    implementation name: 'tools'
+    testImplementation 'junit:junit:4.11'
+}
+
+group = 'jbse'
+version = '0.10.0-SNAPSHOT'
+description = 'JBSE'
+sourceCompatibility = '1.8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+compileJavacc {
+    arguments = [output_directory: compileJavacc.outputDirectory.absolutePath + '/jbse/apps/settings']
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir compileJavacc.outputDirectory
+        }
+    }
+}
+
+shadowJar {
+    classifier = 'shaded'
+    exclude 'tools.jar'
+    relocate 'javassist', 'jbse.javassist'
+}
+
+build.dependsOn 'shadowJar'
+
+jar {
+    manifest {
+        attributes 'Specification-Title': 'Java Virtual Machine Specification',
+                   'Specification-Vendor': 'Oracle Corporation',
+                   'Specification-Version': '1.8',
+                   'Implementation-Title': description,
+                   'Implementation-Vendor': 'University of Milano-Bicocca',
+                   'Implementation-Version': version
+    }
+}
