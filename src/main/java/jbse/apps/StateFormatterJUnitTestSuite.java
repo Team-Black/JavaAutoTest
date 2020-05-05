@@ -256,59 +256,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append("    public void test");
             this.s.append(testCounter);
             this.s.append("() {\n");
-            /*this.s.append("        //test case for state ");
-            this.s.append(finalState.getBranchIdentifier());
-            this.s.append('[');
-            this.s.append(finalState.getSequenceNumber());
-            this.s.append("]\n");*/
         }
-
-        /*private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter)
-        throws FrozenStateException {
-            if (this.panic) {
-                return;
-            }
-            this.s.append(INDENT);
-            this.s.append("this.nullObjectFields = new HashSet<>();\n");
-            final Collection<Clause> pathCondition = finalState.getPathCondition();
-            for (Iterator<Clause> iterator = pathCondition.iterator(); iterator.hasNext(); ) {
-                final Clause clause = iterator.next();
-                this.s.append(INDENT);
-                if (clause instanceof ClauseAssumeExpands) {
-                    final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
-                    final Symbolic symbol = clauseExpands.getReference();
-                    final long heapPosition = clauseExpands.getHeapPosition();
-                    setWithNewObject(finalState, symbol, heapPosition, iterator, model);
-                } else if (clause instanceof ClauseAssumeNull) {
-                    final ClauseAssumeNull clauseNull = (ClauseAssumeNull) clause;
-                    final ReferenceSymbolic symbol = clauseNull.getReference();
-                    setWithNull(symbol);
-                } else if (clause instanceof ClauseAssumeAliases) {
-                    final ClauseAssumeAliases clauseAliases = (ClauseAssumeAliases) clause;
-                    final Symbolic symbol = clauseAliases.getReference();
-                    final long heapPosition = clauseAliases.getHeapPosition();
-                    setWithAlias(finalState, symbol, heapPosition);
-                } else if (clause instanceof ClauseAssume) {
-                    if (model == null) {
-                        this.panic = true;
-                        return;
-                    }
-                    final ClauseAssume clauseAssume = (ClauseAssume) clause;
-                    final Primitive p = clauseAssume.getCondition();
-                    addPrimitiveSymbolAssignments(p, model);
-                } else {
-                    this.s.append(';');
-                }
-                this.s.append(" // "); //comment
-                this.s.append(clause.toString());
-                if (this.clauseLength != null) {
-                    this.s.append(", ");
-                    this.s.append(this.clauseLength.toString());
-                    this.clauseLength = null;
-                }
-                this.s.append('\n');
-            }
-        }*/
 
         private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter)
                 throws FrozenStateException {
@@ -325,24 +273,20 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 }
                 this.s.append(INDENT);
                 if (clause instanceof ClauseAssumeExpands) {
-                    //this.s.append("A:");
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final Symbolic symbol = clauseExpands.getReference();
                     final long heapPosition = clauseExpands.getHeapPosition();
                     setWithNewObject(finalState, symbol, heapPosition, iterator, model);
                 } else if (clause instanceof ClauseAssumeNull) {
-                    //this.s.append("B:");
                     final ClauseAssumeNull clauseNull = (ClauseAssumeNull) clause;
                     final ReferenceSymbolic symbol = clauseNull.getReference();
                     setWithNull(symbol);
                 } else if (clause instanceof ClauseAssumeAliases) {
-                    //this.s.append("C:");
                     final ClauseAssumeAliases clauseAliases = (ClauseAssumeAliases) clause;
                     final Symbolic symbol = clauseAliases.getReference();
                     final long heapPosition = clauseAliases.getHeapPosition();
                     setWithAlias(finalState, symbol, heapPosition);
                 } else if (clause instanceof ClauseAssume) {
-                    //this.s.append("D:");
                     if (model == null) {
                         this.panic = true;
                         return;
@@ -351,13 +295,6 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     final Primitive p = clauseAssume.getCondition();
                     addPrimitiveSymbolAssignments(p, model);
                 }
-                /*this.s.append(" // "); //comment
-                this.s.append(clause.toString());
-                if (this.clauseLength != null) {
-                    this.s.append(", ");
-                    this.s.append(this.clauseLength.toString());
-                    this.clauseLength = null;
-                }*/
                 this.s.append('\n');
             }
         }
@@ -394,12 +331,6 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 }
                 final String methodName = initialState.getRootMethodSignature().getName();
                 this.s.append(methodName);
-                /*if ("this".equals(initialState.getRootFrame().getLocalVariableDeclaredName(0))) {
-                    this.s.append("__ROOT_this.");
-                    this.s.append(methodName);
-                } else {
-                    this.s.append(methodName);
-                }*/
                 this.s.append('(');
                 final Map<Integer, Variable> lva = initialState.getRootFrame().localVariables();
                 final TreeSet<Integer> slots = new TreeSet<>(lva.keySet());
@@ -416,7 +347,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     if (currentParam > 1) {
                         s.append(", ");
                     }
-                    final String variable = /*"__ROOT_" + */lv.getName();
+                    final String variable = lv.getName();
                     if (this.symbolsToVariables.containsValue(variable)) {
                         this.s.append(variable);
                     } else if (isPrimitiveIntegral(lv.getType().charAt(0))) {
@@ -435,58 +366,6 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
 
-        /*private void appendAssert(State initialState, State finalState) throws FrozenStateException {
-            if (this.panic) {
-                return;
-            }
-            final Value returnedValue = finalState.getStuckReturn();
-            final boolean mustCheckReturnedValue = 
-            (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
-            if (mustCheckReturnedValue) {
-                this.s.append(INDENT);
-                this.s.append("assertTrue(__returnedValue == ");
-                final char returnType;
-                try {
-                    returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
-                } catch (ThreadStackEmptyException e) {
-                    //this should never happen
-                    throw new UnexpectedInternalException(e);
-                }
-                if (returnType == Type.BOOLEAN) {
-                    if (returnedValue instanceof Simplex) {
-                        final Simplex returnedValueSimplex = (Simplex) returnedValue;
-                        this.s.append(returnedValueSimplex.isZeroOne(true) ? "false" : "true");
-                    } else {
-                        this.s.append(returnedValue.toString());
-                    }
-                } else if (isPrimitive(returnType)) {
-                    if (returnedValue instanceof Simplex) {
-                        if (returnType == Type.BYTE) {
-                            this.s.append("(byte) "); 
-                        } else if (returnType == Type.CHAR) {
-                            this.s.append("(char) ");
-                        } else if (returnType == Type.SHORT) {
-                            this.s.append("(short) "); 
-                        }
-                    }
-                    this.s.append(returnedValue.toString());
-                } else {
-                    final Reference returnedRef = (Reference) returnedValue;
-                    if (finalState.isNull(returnedRef)) {
-                        this.s.append("null");
-                    } else {
-                        final String var = generateName(finalState.getObject(returnedRef).getOrigin().asOriginString());
-                        if (hasMemberAccessor(var)) {
-                            this.s.append(getValue(var));
-                        } else {
-                            this.s.append(var);
-                        }
-                    }
-                }
-                this.s.append(");\n");
-            }
-        }*/
-
         private void appendAssert(State initialState, State finalState) throws FrozenStateException {
             if (this.panic) {
                 return;
@@ -496,7 +375,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             if (mustCheckReturnedValue) {
                 this.s.append(INDENT);
-                this.s.append("assertTrue(__returnedValue == ");
+                this.s.append("assertTrue(returnedValue == ");
                 final char returnType;
                 try {
                     returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);

@@ -10,7 +10,7 @@ import jbse.common.Type;
  * @author Pietro Braione
  */
 public final class DefaultValue extends Value {
-    private static DefaultValue instance = new DefaultValue();
+    private static final DefaultValue instance = new DefaultValue();
 
     private DefaultValue() { 
         super(Type.UNKNOWN); 
