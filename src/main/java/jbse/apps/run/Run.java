@@ -73,13 +73,13 @@ import jbse.val.Simplex;
  * Class implementing an interactive runner for symbolically executing a method.
  * At each step of the symbolic execution {@code Run} prints on a set of
  * output and error streams:
- * 
+ *
  * <ul>
  * <li>the identifier of the backtrack point created by the step, whenever such
  * a backtrack point is created;</li>
  * <li>the current execution state in textual form.</li>
  * </ul>
- * 
+ *
  * {@code Run} executes a path until it reaches a stuck state; then, if it
  * can backtrack to some state, it asks the user via console whether it should
  * backtrack. {@code Run} tries to establish a connection with a decision
@@ -87,7 +87,7 @@ import jbse.val.Simplex;
  * valid decision procedure it queries via console the user whenever a branch
  * point is encountered. A {@code Run} session can be automatically dumped
  * to file for offline inspection.
- * 
+ *
  * @author Pietro Braione
  */
 public final class Run {
@@ -133,9 +133,9 @@ public final class Run {
     /** Counter for the number of analyzed paths that are unsafe (violate some assertion). */
     private long pathsUnsafe = 0;
 
-    /** 
-     * Counter for the number of analyzed paths that are unmanageable 
-     * (the symbolic executor is not able to execute them). 
+    /**
+     * Counter for the number of analyzed paths that are unmanageable
+     * (the symbolic executor is not able to execute them).
      */
     private long pathsUnmanageable = 0;
 
@@ -150,7 +150,7 @@ public final class Run {
 
     /** The time spent during the concretization checks. */
     private long elapsedTimeConcretization = 0;
-    
+
     /** Whether we are still in the pre-initial phase. */
     private boolean atPreInitialPhase = true;
 
@@ -170,7 +170,7 @@ public final class Run {
 
     /**
      * Enum listing which counter must be incremented for stats.
-     * 
+     *
      * @author Pietro Braione
      *
      */
@@ -189,21 +189,21 @@ public final class Run {
         private boolean mayPrint;
 
         /**
-         * Determines whether the stack size of the current state 
+         * Determines whether the stack size of the current state
          * is below the maximum threshold for being printed.
-         * 
+         *
          * @return {@code true} iff it is below the threshold.
          */
         private boolean stackSizeAcceptable() {
             final State currentState = Run.this.engine.getCurrentState();
-            return (Run.this.parameters.getStackDepthShow() == 0 || 
+            return (Run.this.parameters.getStackDepthShow() == 0 ||
                     Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
         }
 
         /**
          * Displays the current state and prompts the user in case
          * of interactive mode
-         * 
+         *
          * @return {@code true} iff the user told to stop execution.
          */
         private boolean printAndAsk() {
@@ -225,34 +225,34 @@ public final class Run {
                 if (ans.equals("x")) {
                     stop = true;
                 }
-            }			
+            }
             return stop;
         }
 
         @Override
         public boolean atStart() {
             Run.this.emitPrologue();
-            
+
             //enables or disables printing
             this.mayPrint = Run.this.parameters.getShowSystemClassesInitialization();
 
             //prints the state (all+bytecode and branches)
             boolean stop = false;
-            if (Run.this.parameters.getStepShowMode() == StepShowMode.METHOD || 
-                Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
+            if (Run.this.parameters.getStepShowMode() == StepShowMode.METHOD ||
+                    Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
                 stop = printAndAsk();
-            } 
+            }
             return stop;
         }
-        
+
         @Override
         public boolean atInitial() {
-        	Run.this.atPreInitialPhase = false;
-        	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
-        	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
-        	return super.atInitial();
+            Run.this.atPreInitialPhase = false;
+            Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
+            Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
+            return super.atInitial();
         }
-        
+
         @Override
         public boolean atPathStart() {
             //scope not yet exhausted
@@ -264,7 +264,7 @@ public final class Run {
             //exits if user wants
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL ||
-                Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
+                    Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
                 stop = printAndAsk();
             }
 
@@ -276,7 +276,7 @@ public final class Run {
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
                 stop = printAndAsk();
-            } 
+            }
             return stop;
         }
 
@@ -284,10 +284,10 @@ public final class Run {
         public void atEnd() {
             Run.this.emitEpilogue();
             if (Run.this.atPreInitialPhase) {
-            	//this means that an exception was raised during the
-            	//pre-initial phase: fix the stats
-            	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
-            	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
+                //this means that an exception was raised during the
+                //pre-initial phase: fix the stats
+                Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
+                Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
             }
             super.atEnd();
         }
@@ -334,7 +334,7 @@ public final class Run {
 
         @Override
         public boolean atCannotManageStateException(CannotManageStateException e)
-        throws CannotManageStateException {
+                throws CannotManageStateException {
             if (e instanceof CannotInvokeNativeException) {
                 this.pathKind = PathTypes.UNMANAGEABLE;
                 this.endOfPathMessage = WARNING_CANNOT_INVOKE_NATIVE + e.getMessage();
@@ -361,35 +361,35 @@ public final class Run {
         @Override
         public boolean atStepPost() {
             final State currentState = Run.this.engine.getCurrentState();
-            
+
             try {
-            	if (Run.this.guidance != null) {
-            		Run.this.guidance.step(currentState);
-            	}
+                if (Run.this.guidance != null) {
+                    Run.this.guidance.step(currentState);
+                }
             } catch (GuidanceException e) {
-            	Run.this.err(ERROR_UNEXPECTED);
-            	Run.this.err(e);
-            	return true;
+                Run.this.err(ERROR_UNEXPECTED);
+                Run.this.err(e);
+                return true;
             }
-            
+
             //if a resolved reference has not been expanded, prints a warning
-            if (Run.this.parameters.getShowWarnings() && 
-                getEngine().someReferenceNotExpanded()) {
+            if (Run.this.parameters.getShowWarnings() &&
+                    getEngine().someReferenceNotExpanded()) {
                 Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + " " +
-                             getEngine().getNonExpandedReferencesOrigins() +
-                             WARNING_PARTIAL_REFERENCE_RESOLUTION);
+                        getEngine().getNonExpandedReferencesOrigins() +
+                        WARNING_PARTIAL_REFERENCE_RESOLUTION);
             }
-            
+
             //enables printing if we hit the root method execution
             if (Run.this.engine.atInitialState()) {
-            	this.mayPrint = true;
+                this.mayPrint = true;
             }
 
             //prints/asks (all+bytecode and branches)
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL) {
                 stop = printAndAsk();
-            } 
+            }
             return stop;
         }
 
@@ -399,7 +399,7 @@ public final class Run {
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
                 stop = printAndAsk();
-            } 
+            }
             return stop;
         }
 
@@ -419,11 +419,11 @@ public final class Run {
                 final State currentState = Run.this.engine.getCurrentState();
                 //prints the leaf state if the case
                 if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL ||       //already shown
-                    Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE ||    //already shown
-                    Run.this.parameters.getStepShowMode() == StepShowMode.METHOD ||    //already shown
-                    Run.this.parameters.getStepShowMode() == StepShowMode.NONE   ||    //not to show
-                    !Run.this.parameters.getPathsToShow().contains(this.pathKind)) { //not to show
-                    //does nothing, the leaf state has been already printed 
+                        Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE ||    //already shown
+                        Run.this.parameters.getStepShowMode() == StepShowMode.METHOD ||    //already shown
+                        Run.this.parameters.getStepShowMode() == StepShowMode.NONE   ||    //not to show
+                        !Run.this.parameters.getPathsToShow().contains(this.pathKind)) { //not to show
+                    //does nothing, the leaf state has been already printed
                     //or must not be printed at all
                 } else {
                     //prints the refined root state for the summaries case
@@ -435,37 +435,37 @@ public final class Run {
                     }
                     //prints the leaf (stuck) state
                     Run.this.emitState(currentState);
-                } 
+                }
 
                 //displays path end message and updates stats
                 final CounterKind counterKind;
                 switch (this.pathKind) {
-                case SAFE:
-                    ++Run.this.pathsSafe;
-                    this.endOfPathMessage = MSG_PATH_SAFE;
-                    counterKind = CounterKind.INC_SAFE;
-                    break;
-                case UNSAFE:
-                    ++Run.this.pathsUnsafe;
-                    this.endOfPathMessage = MSG_PATH_UNSAFE;
-                    counterKind = CounterKind.INC_UNSAFE;
-                    break;
-                case OUT_OF_SCOPE:
-                    //counter is provided by runner
-                    //this.endOfPathMessage already set
-                    counterKind = CounterKind.INC_OUT_OF_SCOPE;
-                    break;
-                case UNMANAGEABLE:
-                    ++Run.this.pathsUnmanageable;
-                    //this.endOfPathMessage already set
-                    counterKind = null;
-                    break;
-                case CONTRADICTORY:
-                    this.endOfPathMessage = MSG_PATH_CONTRADICTORY;
-                    counterKind = null;
-                    break;
-                default: //to keep compiler happy:
-                    throw new AssertionError();
+                    case SAFE:
+                        ++Run.this.pathsSafe;
+                        this.endOfPathMessage = MSG_PATH_SAFE;
+                        counterKind = CounterKind.INC_SAFE;
+                        break;
+                    case UNSAFE:
+                        ++Run.this.pathsUnsafe;
+                        this.endOfPathMessage = MSG_PATH_UNSAFE;
+                        counterKind = CounterKind.INC_UNSAFE;
+                        break;
+                    case OUT_OF_SCOPE:
+                        //counter is provided by runner
+                        //this.endOfPathMessage already set
+                        counterKind = CounterKind.INC_OUT_OF_SCOPE;
+                        break;
+                    case UNMANAGEABLE:
+                        ++Run.this.pathsUnmanageable;
+                        //this.endOfPathMessage already set
+                        counterKind = null;
+                        break;
+                    case CONTRADICTORY:
+                        this.endOfPathMessage = MSG_PATH_CONTRADICTORY;
+                        counterKind = null;
+                        break;
+                    default: //to keep compiler happy:
+                        throw new AssertionError();
                 }
                 if (Run.this.parameters.getShowWarnings()) {
                     Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfPathMessage);
@@ -495,8 +495,8 @@ public final class Run {
         }
 
         @Override
-        public boolean atDecisionException(DecisionException e) 
-        throws DecisionException {
+        public boolean atDecisionException(DecisionException e)
+                throws DecisionException {
             Run.this.err(ERROR_ENGINE_DECISION_PROCEDURE);
             Run.this.err(e);
             return super.atDecisionException(e);
@@ -504,7 +504,7 @@ public final class Run {
 
         @Override
         public boolean atEngineStuckException(EngineStuckException e)
-        throws EngineStuckException {
+                throws EngineStuckException {
             Run.this.err(ERROR_ENGINE_STUCK);
             Run.this.err(e);
             return super.atEngineStuckException(e);
@@ -512,7 +512,7 @@ public final class Run {
 
         @Override
         public boolean atClasspathException(ClasspathException e)
-        throws ClasspathException {
+                throws ClasspathException {
             Run.this.err(ERROR_BAD_CLASSPATH);
             Run.this.err(e);
             return super.atClasspathException(e);
@@ -520,7 +520,7 @@ public final class Run {
 
         @Override
         public boolean atDecisionBacktrackException(DecisionBacktrackException e)
-        throws DecisionBacktrackException {
+                throws DecisionBacktrackException {
             Run.this.err(ERROR_ENGINE_DECISION_PROCEDURE);
             Run.this.err(e);
             return super.atDecisionBacktrackException(e);
@@ -528,22 +528,22 @@ public final class Run {
 
         @Override
         public boolean atCannotBacktrackException(CannotBacktrackException e)
-        throws CannotBacktrackException {
+                throws CannotBacktrackException {
             Run.this.err(ERROR_UNEXPECTED);
             Run.this.err(e);
             return super.atCannotBacktrackException(e);
         }
-        
+
         @Override
         public boolean atNonexistingObservedVariablesException(NonexistingObservedVariablesException e)
-        throws NonexistingObservedVariablesException {
+                throws NonexistingObservedVariablesException {
             for (int i : e.getVariableIndices()) {
                 if (Run.this.parameters.getShowWarnings()) {
-                	Run.this.log(WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
-                        + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
+                    Run.this.log(WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
+                            + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
                 }
             }
-        	return super.atNonexistingObservedVariablesException(e);
+            return super.atNonexistingObservedVariablesException(e);
         }
 
         private void checkFinalStateIsConcretizable(CounterKind ctr) {
@@ -566,16 +566,16 @@ public final class Run {
             if (Run.this.parameters.getShowWarnings()) {
                 final State currentState = Run.this.engine.getCurrentState();
                 Run.this.log(currentState.getBranchIdentifier() +
-                             (concretizable ? MSG_PATH_CONCRETIZABLE : MSG_PATH_NOT_CONCRETIZABLE));
+                        (concretizable ? MSG_PATH_CONCRETIZABLE : MSG_PATH_NOT_CONCRETIZABLE));
             }
         }
     }
 
     /**
      * Runs the method.
-     * 
-     * @return an {@code int} value representing an error code, 
-     * {@code 0} if everything went ok, {@code 1} if the cause 
+     *
+     * @return an {@code int} value representing an error code,
+     * {@code 0} if everything went ok, {@code 1} if the cause
      * of the error was external (inputs), {@code 2} if the cause
      * of the error was internal (bugs).
      */
@@ -594,14 +594,14 @@ public final class Run {
         // runs
         try {
             this.runner.run();
-        } catch (ClasspathException | 
-                 DecisionException | CannotManageStateException | 
-                 EngineStuckException | CannotBacktrackException | 
-                 NonexistingObservedVariablesException e) {
+        } catch (ClasspathException |
+                DecisionException | CannotManageStateException |
+                EngineStuckException | CannotBacktrackException |
+                NonexistingObservedVariablesException e) {
             //already reported
             retVal = 1;
         } catch (ThreadStackEmptyException | ContradictionException |
-                 FailureException | UnexpectedInternalException e) {
+                FailureException | UnexpectedInternalException e) {
             //this should never happen because Actions does not rethrow these exceptions
             err(ERROR_UNEXPECTED);
             err(e);
@@ -620,7 +620,7 @@ public final class Run {
 
     /**
      * Gets a line of text on the input stream.
-     * 
+     *
      * @param s the input prompt.
      * @return the read line.
      */
@@ -630,7 +630,7 @@ public final class Run {
 
     /**
      * Prints a line of text on the output streams.
-     * 
+     *
      * @param s the text to be printed.
      */
     public void out(String s) {
@@ -639,7 +639,7 @@ public final class Run {
 
     /**
      * Prints some text on the output streams.
-     * 
+     *
      * @param s the text to be printed.
      */
     public void outNoBreak(String s) {
@@ -648,7 +648,7 @@ public final class Run {
 
     /**
      * Prints a line of text on the log streams.
-     * 
+     *
      * @param s the text to be printed.
      */
     public void log(String s) {
@@ -657,7 +657,7 @@ public final class Run {
 
     /**
      * Prints a line of text on the error streams.
-     * 
+     *
      * @param s the text to be printed.
      */
     public void err(String s) {
@@ -666,7 +666,7 @@ public final class Run {
 
     /**
      * Prints a throwable on the error streams.
-     * 
+     *
      * @param t the {@link Throwable} to be printed.
      */
     public void err(Throwable t) {
@@ -676,7 +676,7 @@ public final class Run {
     /**
      * Processes the provided {@link RunParameters} and builds the {@link Engine}
      * which will be used by the runner to perform the symbolic execution.
-     * 
+     *
      * @return an {@code int} value representing an error code.
      */
     private int build() {
@@ -712,7 +712,7 @@ public final class Run {
             for (int i : e.getVariableIndices()) {
                 if (Run.this.parameters.getShowWarnings()) {
                     log(WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
-                        + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
+                            + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
                 }
             }
         } catch (DecisionException e) {
@@ -784,9 +784,9 @@ public final class Run {
 
     /**
      * Returns the engine's initial state.
-     * Convenience for formatter and 
+     * Convenience for formatter and
      * decision procedure creation.
-     * 
+     *
      * @return the initial {@link State}.
      */
     private State getInitialState() {
@@ -796,7 +796,7 @@ public final class Run {
     /**
      * Returns the engine's initial state.
      * Convenience for decision procedure creation.
-     * 
+     *
      * @return the initial {@link State}.
      */
     private State getCurrentState() {
@@ -804,12 +804,12 @@ public final class Run {
     }
 
     /**
-     * Returns the decision procedure's current 
+     * Returns the decision procedure's current
      * model or {@code null}. Convenience for
      * formatter creation.
-     * 
+     *
      * @return a {@link Map}{@code <}{@link PrimitiveSymbolic}{@code ,}{@link Simplex}{@code >}
-     *         or {@code null} 
+     *         or {@code null}
      */
     private Map<PrimitiveSymbolic, Simplex> getModel() {
         try {
@@ -821,7 +821,7 @@ public final class Run {
 
     /**
      * Creates the formatter.
-     * 
+     *
      * @throws CannotBuildFormatterException upon failure.
      */
     private void createFormatter() throws CannotBuildFormatterException {
@@ -843,9 +843,9 @@ public final class Run {
 
     /**
      * Creates a {@link CalculatorRewriting}.
-     * 
+     *
      * @return the {@link CalculatorRewriting}.
-     * @throws CannotBuildEngineException upon failure 
+     * @throws CannotBuildEngineException upon failure
      *         (cannot instantiate rewriters).
      */
     private CalculatorRewriting createCalculator() throws CannotBuildEngineException {
@@ -854,9 +854,9 @@ public final class Run {
             calc = new CalculatorRewriting();
             calc.addRewriter(new RewriterOperationOnSimplex()); //indispensable
             for (final Class<? extends RewriterCalculatorRewriting> rewriterClass : this.parameters.getRewriters()) {
-                if (rewriterClass == null) { 
+                if (rewriterClass == null) {
                     //no rewriter
-                    continue; 
+                    continue;
                 }
                 final RewriterCalculatorRewriting rewriter = (RewriterCalculatorRewriting) rewriterClass.newInstance();
                 calc.addRewriter(rewriter);
@@ -869,155 +869,155 @@ public final class Run {
 
     /**
      * Creates the decision procedures in {@code this.decisionProcedure}
-     * and {@code this.decisionProcedureConcretization}. 
-     * 
+     * and {@code this.decisionProcedureConcretization}.
+     *
      * @param calc a {@link CalculatorRewriting}.
      * @throws CannotBuildDecisionProcedureException upon failure.
      */
     private void createDecisionProcedure(CalculatorRewriting calc)
-    throws CannotBuildDecisionProcedureException {
-    	try {
-    		final Path path = this.parameters.getExternalDecisionProcedurePath();       
+            throws CannotBuildDecisionProcedureException {
+        try {
+            final Path path = this.parameters.getExternalDecisionProcedurePath();
 
-    		//prints some feedback
-    		if (this.parameters.getShowInfo()) {
-    			if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-    				log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
-    			} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
-    				log(MSG_TRY_CVC4 + (path == null ? "default" : path.toString()) + ".");
-    			} else if (this.parameters.getInteractionMode() == InteractionMode.NO_INTERACTION) {
-    				log(MSG_DECISION_BASIC);
-    			} else {
-    				log(MSG_DECISION_INTERACTIVE);
-    			}
-    		}
+            //prints some feedback
+            if (this.parameters.getShowInfo()) {
+                if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
+                    log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
+                } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
+                    log(MSG_TRY_CVC4 + (path == null ? "default" : path.toString()) + ".");
+                } else if (this.parameters.getInteractionMode() == InteractionMode.NO_INTERACTION) {
+                    log(MSG_DECISION_BASIC);
+                } else {
+                    log(MSG_DECISION_INTERACTIVE);
+                }
+            }
 
-    		//initializes cores
-    		final boolean needHeapCheck = (this.parameters.getUseConservativeRepOks() || this.parameters.getDoConcretization());
-    		DecisionProcedure core = new DecisionProcedureAlwSat(calc);
-    		DecisionProcedure coreNumeric = (needHeapCheck ? new DecisionProcedureAlwSat(calc) : null);
+            //initializes cores
+            final boolean needHeapCheck = (this.parameters.getUseConservativeRepOks() || this.parameters.getDoConcretization());
+            DecisionProcedure core = new DecisionProcedureAlwSat(calc);
+            DecisionProcedure coreNumeric = (needHeapCheck ? new DecisionProcedureAlwSat(calc) : null);
 
-    		//wraps cores with external numeric decision procedure
-    		final DecisionProcedureType type = this.parameters.getDecisionProcedureType();
-    		try {
-    			if (type == DecisionProcedureType.ALL_SAT) {
-    				//do nothing
-    			} else if (type == DecisionProcedureType.Z3) {
-    				final String switchChar = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
-    				final ArrayList<String> z3CommandLine = new ArrayList<>();
-    				z3CommandLine.add(path == null ? "z3" : path.toString());
-    				z3CommandLine.add(switchChar + "smt2");
-    				z3CommandLine.add(switchChar + "in");
-    				z3CommandLine.add(switchChar + "t:10");
-    				core = new DecisionProcedureSMTLIB2_AUFNIRA(core, z3CommandLine);
-    				coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, z3CommandLine) : null);
-    			} else if (type == DecisionProcedureType.CVC4) {
-    				final ArrayList<String> cvc4CommandLine = new ArrayList<>();
-    				cvc4CommandLine.add(path == null ? "cvc4" : path.toString());
-    				cvc4CommandLine.add("--lang=smt2");
-    				cvc4CommandLine.add("--output-lang=smt2");
-    				cvc4CommandLine.add("--no-interactive");
-    				cvc4CommandLine.add("--incremental");
-    				cvc4CommandLine.add("--tlimit-per=10000");
-    				core = new DecisionProcedureSMTLIB2_AUFNIRA(core, cvc4CommandLine);
-    				coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, cvc4CommandLine) : null);
-    			} else {
-    				core.close();
-    				if (coreNumeric != null) {
-    					coreNumeric.close();
-    				}
-    				throw new CannotBuildDecisionProcedureException(ERROR_UNDEF_DECISION_PROCEDURE);
-    			}
-    		} catch (DecisionException e) {
-    			throw new CannotBuildDecisionProcedureException(e);
-    		}
+            //wraps cores with external numeric decision procedure
+            final DecisionProcedureType type = this.parameters.getDecisionProcedureType();
+            try {
+                if (type == DecisionProcedureType.ALL_SAT) {
+                    //do nothing
+                } else if (type == DecisionProcedureType.Z3) {
+                    final String switchChar = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
+                    final ArrayList<String> z3CommandLine = new ArrayList<>();
+                    z3CommandLine.add(path == null ? "z3" : path.toString());
+                    z3CommandLine.add(switchChar + "smt2");
+                    z3CommandLine.add(switchChar + "in");
+                    z3CommandLine.add(switchChar + "t:10");
+                    core = new DecisionProcedureSMTLIB2_AUFNIRA(core, z3CommandLine);
+                    coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, z3CommandLine) : null);
+                } else if (type == DecisionProcedureType.CVC4) {
+                    final ArrayList<String> cvc4CommandLine = new ArrayList<>();
+                    cvc4CommandLine.add(path == null ? "cvc4" : path.toString());
+                    cvc4CommandLine.add("--lang=smt2");
+                    cvc4CommandLine.add("--output-lang=smt2");
+                    cvc4CommandLine.add("--no-interactive");
+                    cvc4CommandLine.add("--incremental");
+                    cvc4CommandLine.add("--tlimit-per=10000");
+                    core = new DecisionProcedureSMTLIB2_AUFNIRA(core, cvc4CommandLine);
+                    coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, cvc4CommandLine) : null);
+                } else {
+                    core.close();
+                    if (coreNumeric != null) {
+                        coreNumeric.close();
+                    }
+                    throw new CannotBuildDecisionProcedureException(ERROR_UNDEF_DECISION_PROCEDURE);
+                }
+            } catch (DecisionException e) {
+                throw new CannotBuildDecisionProcedureException(e);
+            }
 
-    		//further wraps cores with sign analysis, if required
-    		if (this.parameters.getDoSignAnalysis()) {
-    			core = new DecisionProcedureSignAnalysis(core);
-    			coreNumeric = (needHeapCheck ? new DecisionProcedureSignAnalysis(coreNumeric) : null);
-    		}
+            //further wraps cores with sign analysis, if required
+            if (this.parameters.getDoSignAnalysis()) {
+                core = new DecisionProcedureSignAnalysis(core);
+                coreNumeric = (needHeapCheck ? new DecisionProcedureSignAnalysis(coreNumeric) : null);
+            }
 
-    		//further wraps cores with equality analysis, if required
-    		if (this.parameters.getDoEqualityAnalysis()) {
-    			core = new DecisionProcedureEquality(core);
-    			coreNumeric = (needHeapCheck ? new DecisionProcedureEquality(coreNumeric) : null);
-    		}
+            //further wraps cores with equality analysis, if required
+            if (this.parameters.getDoEqualityAnalysis()) {
+                core = new DecisionProcedureEquality(core);
+                coreNumeric = (needHeapCheck ? new DecisionProcedureEquality(coreNumeric) : null);
+            }
 
-    		//sets the decision procedure for checkers
-    		if (needHeapCheck) {
-    			this.decisionProcedureConcretization = new DecisionProcedureAlgorithms(coreNumeric);
-    		}
+            //sets the decision procedure for checkers
+            if (needHeapCheck) {
+                this.decisionProcedureConcretization = new DecisionProcedureAlgorithms(coreNumeric);
+            }
 
-    		//further wraps core with LICS decision procedure
-    		if (this.parameters.getUseLICS()) {
-    			core = new DecisionProcedureLICS(core, this.parameters.getLICSRulesRepo());
-    		}
+            //further wraps core with LICS decision procedure
+            if (this.parameters.getUseLICS()) {
+                core = new DecisionProcedureLICS(core, this.parameters.getLICSRulesRepo());
+            }
 
-    		//further wraps core with class init decision procedure
-    		core = new DecisionProcedureClassInit(core, this.parameters.getClassInitRulesRepo());
+            //further wraps core with class init decision procedure
+            core = new DecisionProcedureClassInit(core, this.parameters.getClassInitRulesRepo());
 
-    		//further wraps core with conservative repOk decision procedure
-    		if (this.parameters.getUseConservativeRepOks()) {
-    			final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
-    			checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
-    			@SuppressWarnings("resource")
-    			final DecisionProcedureConservativeRepOk dec = 
-    			new DecisionProcedureConservativeRepOk(core, checkerParameters, this.parameters.getConservativeRepOks());
-    			dec.setInitialStateSupplier(this::getInitialState); 
-    			dec.setCurrentStateSupplier(this::getCurrentState); 
-    			core = dec;
-    		}
+            //further wraps core with conservative repOk decision procedure
+            if (this.parameters.getUseConservativeRepOks()) {
+                final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
+                checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
+                @SuppressWarnings("resource")
+                final DecisionProcedureConservativeRepOk dec =
+                        new DecisionProcedureConservativeRepOk(core, checkerParameters, this.parameters.getConservativeRepOks());
+                dec.setInitialStateSupplier(this::getInitialState);
+                dec.setCurrentStateSupplier(this::getCurrentState);
+                core = dec;
+            }
 
-    		//wraps core with custom wrappers
-    		for (DecisionProcedureCreationStrategy c : this.parameters.getDecisionProcedureCreationStrategies()) {
-    			core = c.createAndWrap(core, calc);
-    		}
+            //wraps core with custom wrappers
+            for (DecisionProcedureCreationStrategy c : this.parameters.getDecisionProcedureCreationStrategies()) {
+                core = c.createAndWrap(core, calc);
+            }
 
-    		//wraps with timer
-    		final DecisionProcedureDecoratorTimer tCore = new DecisionProcedureDecoratorTimer(core);
-    		this.timer = tCore;
-    		core = tCore;
+            //wraps with timer
+            final DecisionProcedureDecoratorTimer tCore = new DecisionProcedureDecoratorTimer(core);
+            this.timer = tCore;
+            core = tCore;
 
-    		//wraps with printer if interaction with decision procedure must be shown
-    		if (this.parameters.getShowDecisionProcedureInteraction()) {
-    			core = new DecisionProcedureDecoratorPrint(core, out);
-    		}
+            //wraps with printer if interaction with decision procedure must be shown
+            if (this.parameters.getShowDecisionProcedureInteraction()) {
+                core = new DecisionProcedureDecoratorPrint(core, out);
+            }
 
-    		//finally guidance
-    		if (this.parameters.isGuided()) {
-    			final RunnerParameters guidanceDriverParameters = this.parameters.getGuidanceDriverParameters(calc);
-    			if (this.parameters.getShowInfo()) {
-    				log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
-    			}
-    			try {
-    				if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
-    					this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
-    				} else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
-    					this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
-    				} else {
-    					throw new UnexpectedInternalException(ERROR_DECISION_PROCEDURE_GUIDANCE_UNRECOGNIZED + this.parameters.getGuidanceType().toString());
-    				}
-    			} catch (GuidanceException | UnexpectedInternalException e) {
-    				err(ERROR_GUIDANCE_FAILED + e.getMessage());
-    				throw new CannotBuildDecisionProcedureException(e);
-    			}
-    			core = this.guidance;
-    		}
+            //finally guidance
+            if (this.parameters.isGuided()) {
+                final RunnerParameters guidanceDriverParameters = this.parameters.getGuidanceDriverParameters(calc);
+                if (this.parameters.getShowInfo()) {
+                    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
+                }
+                try {
+                    if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
+                        this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+                    } else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
+                        this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+                    } else {
+                        throw new UnexpectedInternalException(ERROR_DECISION_PROCEDURE_GUIDANCE_UNRECOGNIZED + this.parameters.getGuidanceType().toString());
+                    }
+                } catch (GuidanceException | UnexpectedInternalException e) {
+                    err(ERROR_GUIDANCE_FAILED + e.getMessage());
+                    throw new CannotBuildDecisionProcedureException(e);
+                }
+                core = this.guidance;
+            }
 
-    		//sets the result
-    		this.decisionProcedure = ((core instanceof DecisionProcedureAlgorithms) ? 
-    				(DecisionProcedureAlgorithms) core :
-    					new DecisionProcedureAlgorithms(core));
-    	} catch (InvalidInputException e) {
-    		//this should never happen
-    		throw new UnexpectedInternalException(e);
-    	}
+            //sets the result
+            this.decisionProcedure = ((core instanceof DecisionProcedureAlgorithms) ?
+                    (DecisionProcedureAlgorithms) core :
+                    new DecisionProcedureAlgorithms(core));
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
     }
 
     /**
      * Creates the heap checker into {@code this.checker}.
-     * 
+     *
      * @param decisionProcedureConcretization the {@link DecisionProcedureAlgorithms}
      *        to be used by the heap checker.
      */
@@ -1025,10 +1025,10 @@ public final class Run {
         if (this.parameters.getDoConcretization()) {
             final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
             checkerParameters.setDecisionProcedure(decisionProcedureConcretization);
-            this.checker = 
-                new InitialHeapChecker(checkerParameters, ConcretizationCheck.class, this.parameters.getConcretizationMethods());
-            this.checker.setInitialStateSupplier(this::getInitialState); 
-            this.checker.setCurrentStateSupplier(this::getCurrentState); 
+            this.checker =
+                    new InitialHeapChecker(checkerParameters, ConcretizationCheck.class, this.parameters.getConcretizationMethods());
+            this.checker.setInitialStateSupplier(this::getInitialState);
+            this.checker.setCurrentStateSupplier(this::getCurrentState);
         }
     }
 
@@ -1043,9 +1043,9 @@ public final class Run {
 
     /**
      * Emits a {@link State} of the symbolic execution.
-     * 
+     *
      * @param s the {@link State} to be emitted.
-     * @param isRootBranch {@code true} iff 
+     * @param isRootBranch {@code true} iff
      *        {@code s} is at a branch point.
      */
     private void emitState(State s) {
@@ -1072,48 +1072,48 @@ public final class Run {
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
         final long speedPostInitialPhase = (elapsedTime == elapsedTimePreInitialPhase) ? 0 : (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
-        final long pathsViolatingAssumptions = 
-            this.runner.getPathsTotal() -
-            this.pathsSafe - 
-            this.pathsUnsafe -
-            this.runner.getPathsOutOfScope() -
-            this.pathsUnmanageable;
+        final long pathsViolatingAssumptions =
+                this.runner.getPathsTotal() -
+                        this.pathsSafe -
+                        this.pathsUnsafe -
+                        this.runner.getPathsOutOfScope() -
+                        this.pathsUnmanageable;
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", " +
-        	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
-            MSG_END_PATHS_TOT + this.runner.getPathsTotal() + ", " +
-            MSG_END_PATHS_SAFE + this.pathsSafe + 
-            (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.pathsConcretizableSafe + " concretizable)" :
-             "") +
-            ", " +
-            MSG_END_PATHS_UNSAFE + this.pathsUnsafe + 
-            (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.pathsConcretizableUnsafe + " concretizable)" :
-             "") +
-            ", " +
-            MSG_END_PATHS_OUT_OF_SCOPE + this.runner.getPathsOutOfScope() +
-            (Run.this.parameters.getDoConcretization() ? 
-             " (" + this.pathsConcretizableOutOfScope + " concretizable)" :  
-             "") +
-            ", " +
-            MSG_END_PATHS_VIOLATING_ASSUMPTION + pathsViolatingAssumptions +
-            ", " +
-            MSG_END_PATHS_UNMANAGEABLE + this.pathsUnmanageable + ".");
+                MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
+                MSG_END_PATHS_TOT + this.runner.getPathsTotal() + ", " +
+                MSG_END_PATHS_SAFE + this.pathsSafe +
+                (Run.this.parameters.getDoConcretization() ?
+                        " (" + this.pathsConcretizableSafe + " concretizable)" :
+                        "") +
+                ", " +
+                MSG_END_PATHS_UNSAFE + this.pathsUnsafe +
+                (Run.this.parameters.getDoConcretization() ?
+                        " (" + this.pathsConcretizableUnsafe + " concretizable)" :
+                        "") +
+                ", " +
+                MSG_END_PATHS_OUT_OF_SCOPE + this.runner.getPathsOutOfScope() +
+                (Run.this.parameters.getDoConcretization() ?
+                        " (" + this.pathsConcretizableOutOfScope + " concretizable)" :
+                        "") +
+                ", " +
+                MSG_END_PATHS_VIOLATING_ASSUMPTION + pathsViolatingAssumptions +
+                ", " +
+                MSG_END_PATHS_UNMANAGEABLE + this.pathsUnmanageable + ".");
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
-        	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
-            MSG_END_SPEED + speed + " states/sec, " +
-            MSG_END_SPEED_POSTINITIAL + speedPostInitialPhase + " states/sec" +
-            (Run.this.parameters.getDoConcretization() ? 
-             ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(this.elapsedTimeConcretization) + " (" + Util.formatTimePercent(this.elapsedTimeConcretization, elapsedTime) + " of total)" :
-             "") +
-            (this.timer == null ? 
-             "." :
-             ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
+                MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
+                MSG_END_SPEED + speed + " states/sec, " +
+                MSG_END_SPEED_POSTINITIAL + speedPostInitialPhase + " states/sec" +
+                (Run.this.parameters.getDoConcretization() ?
+                        ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(this.elapsedTimeConcretization) + " (" + Util.formatTimePercent(this.elapsedTimeConcretization, elapsedTime) + " of total)" :
+                        "") +
+                (this.timer == null ?
+                        "." :
+                        ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
     }
 
     /**
      * Closes this {@link Run} object.
-     * 
+     *
      * @return an {@code int} value representing an error code.
      */
     private int close() {
@@ -1164,10 +1164,10 @@ public final class Run {
     // Private constants.
 
     /** Message: welcome. */
-    private static final String MSG_WELCOME_TXT = "This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";
+    private static final String MSG_WELCOME_TXT = "//This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";
 
     /** Message: trying to connect to Z3. */
-    private static final String MSG_TRY_Z3 = "Connecting to Z3 at ";
+    private static final String MSG_TRY_Z3 = "//Connecting to Z3 at ";
 
     /** Message: trying to connect to CVC4. */
     private static final String MSG_TRY_CVC4 = "Connecting to CVC4 at ";
@@ -1176,7 +1176,7 @@ public final class Run {
     private static final String MSG_TRY_GUIDANCE = "Initializing guidance by driver method ";
 
     /** Message: start of symbolic execution. */
-    private static final String MSG_START = "Starting symbolic execution of method ";
+    private static final String MSG_START = "//Starting symbolic execution of method ";
 
     /** Message: the path is safe. */
     private static final String MSG_PATH_SAFE = " path is safe.";
@@ -1194,10 +1194,10 @@ public final class Run {
     private static final String MSG_PATH_NOT_CONCRETIZABLE = " path has not a concretizable final state.";
 
     /** Message: end of symbolic execution. */
-    private static final String MSG_END = "Symbolic execution finished at ";
+    private static final String MSG_END = "//Symbolic execution finished at ";
 
     /** Message: elapsed time. */
-    private static final String MSG_END_ELAPSED = "Elapsed time: ";
+    private static final String MSG_END_ELAPSED = "//Elapsed time: ";
 
     /** Message: elapsed time during the pre-initial phase. */
     private static final String MSG_END_ELAPSED_PREINITIAL = "Elapsed pre-initial phase time: ";
@@ -1215,7 +1215,7 @@ public final class Run {
     private static final String MSG_END_SPEED_POSTINITIAL = "Average post-initial phase speed: ";
 
     /** Message: analyzed states. */
-    private static final String MSG_END_STATES = "Analyzed states: ";
+    private static final String MSG_END_STATES = "//Analyzed states: ";
 
     /** Message: analyzed pre-initial states. */
     private static final String MSG_END_STATES_PREINITIAL = "Analyzed pre-initial states: ";
@@ -1249,7 +1249,7 @@ public final class Run {
 
     /** Warning: partial reference resolution (part 2). */
     private static final String WARNING_PARTIAL_REFERENCE_RESOLUTION = " not expanded. It may be a " +
-    "hint of too strong user-defined constraints, possibly correct when enforcing redundancy by representation invariant.";
+            "hint of too strong user-defined constraints, possibly correct when enforcing redundancy by representation invariant.";
 
     /** Warning: timeout. */
     private static final String WARNING_TIMEOUT = "Timeout.";
