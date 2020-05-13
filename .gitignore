@@ -137,3 +137,6 @@ hs_err_pid*
 
 ### Gradle Patch ###
 **/build/
+/.idea/JavaAutoTest.iml
+/.idea/checkstyle-idea.xml
+/.idea/modules.xml
