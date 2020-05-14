@@ -21,14 +21,7 @@ import java.util.function.Supplier;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.Clause;
-import jbse.mem.ClauseAssume;
-import jbse.mem.ClauseAssumeAliases;
-import jbse.mem.ClauseAssumeExpands;
-import jbse.mem.ClauseAssumeNull;
-import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.Variable;
+import jbse.mem.*;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
@@ -96,146 +89,21 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     }
 
     private static final String PROLOGUE =
-        "import static java.lang.System.identityHashCode;\n" +
-        "import static org.junit.Assert.*;\n" +
-        "\n" +
-        "import java.lang.reflect.Array;\n" +
-        "import java.lang.reflect.Field;\n" +
-        "import java.util.HashSet;\n" +
-        "import sun.misc.Unsafe;\n" +
-        "\n" +
         "import org.junit.Test;\n" +
         "\n" +
-        "public class TestSuite {\n" +
-        "    private static class AccessibleObject {\n" +
-        "        private final Object target;\n" +
-        "        AccessibleObject(Object o) {\n" +
-        "            target = o;\n" +
-        "        }\n"+
-        "        void set(String fieldName, Object value) {\n" +
-        "            try {\n" +
-        "                final Field p = target.getClass().getDeclaredField(fieldName);\n" +
-        "                p.setAccessible(true);\n" +
-        "                p.set(target, value);\n" +
-        "            } catch (IllegalArgumentException | IllegalAccessException\n" +
-        "                | NoSuchFieldException | SecurityException e) {\n" +
-        "                throw new RuntimeException(e);\n" +
-        "            }\n" +
-        "        }\n" +
-        "        AccessibleObject get(String fieldName) {\n" +
-        "            try {\n" +
-        "                final Field p = target.getClass().getDeclaredField(fieldName);\n" +
-        "                p.setAccessible(true);\n" +
-        "                return new AccessibleObject(p.get(target));\n" +
-        "            } catch (IllegalArgumentException | IllegalAccessException\n" +
-        "                | NoSuchFieldException | SecurityException e) {\n" +
-        "                throw new RuntimeException(e);\n" +
-        "            }\n" +
-        "        }\n" +
-        "        Object getValue() {\n" +
-        "            return target;\n" +
-        "        }\n" +
-        "    }\n" +
-        "\n" +
-        "    private static final Unsafe UNSAFE; //ugly!\n" +
-        "\n" +
-        "    static {\n" +
-        "        final Field uns;\n" +
-        "        try {\n" +
-        "            uns = Unsafe.class.getDeclaredField(\"theUnsafe\");\n" +
-        "            uns.setAccessible(true);\n" +
-        "            UNSAFE = (Unsafe) uns.get(null);\n" +
-        "        } catch (NoSuchFieldException e) {\n" +
-        "            throw new RuntimeException(e);\n" +
-        "        } catch (IllegalAccessException e) {\n" +
-        "            throw new RuntimeException(e);\n" +
-        "        }\n" +
-        "    }\n" +
-        "\n" +
-        "    private static Object newInstance(String type) {\n" +
-        "        try {\n"+
-        "            final Class<?> clazz = Class.forName(type);\n" +
-        "            return clazz.cast(UNSAFE.allocateInstance(clazz));\n" +
-        "        } catch (ClassNotFoundException e) {\n" +
-        "            throw new RuntimeException(e);\n" +
-        "        } catch (InstantiationException e) {\n" +
-        "            throw new RuntimeException(e);\n" +
-        "        }\n" +
-        "    }\n" +
-        "\n" +
-        "    private static Object newArray(String memberType, int length) {\n" +
-        "        try {\n" +
-        "            final Class<?> clazz = Class.forName(memberType);\n" +
-        "            return Array.newInstance(clazz, length);\n" +
-        "        } catch (ClassNotFoundException e) {\n" +
-        "            throw new RuntimeException(e);\n" +
-        "        }\n" +
-        "    }\n" +
-        "\n" +
-        "    public class ObjectField {\n" +
-        "        private final Object obj;\n" +
-        "        private final Field fld;\n" +
-        "        public ObjectField(Object obj, String fldName) {\n" +
-        "            this.obj = obj;\n" +
-        "            try {\n" + 
-        "                this.fld = obj.getClass().getDeclaredField(fldName);\n" +
-        "            } catch (NoSuchFieldException | SecurityException e) {\n" +
-        "                throw new RuntimeException(e);\n" +
-        "            }\n" +
-        "        }\n" +
-        "        @Override\n" +
-        "        public int hashCode() {\n" +
-        "            final int prime = 31;\n" +
-        "            int result = 1;\n" +
-        "            result = prime * result + ((fld == null) ? 0 : fld.hashCode());\n" +
-        "            result = prime * result + ((obj == null) ? 0 : identityHashCode(obj));\n" +
-        "            return result;\n" +
-        "        }\n" +
-        "        @Override\n" +
-        "        public boolean equals(Object obj) {\n" +
-        "            if (this == obj) {\n" +
-        "                return true;\n" +
-        "            }\n" +
-        "            if (obj == null) {\n" +
-        "                return false;\n" +
-        "            }\n" +
-        "            if (getClass() != obj.getClass()) {\n" +
-        "                return false;\n" +
-        "            }\n" +
-        "            final ObjectField other = (ObjectField) obj;\n" +
-        "            if (this.fld == null) {\n" +
-        "                if (other.fld != null) {\n" +
-        "                    return false;\n" +
-        "                }\n" +
-        "            } else if (!fld.equals(other.fld)) {\n" +
-        "                return false;\n" +
-        "            }\n" +
-        "            if (this.obj == null) {\n" +
-        "                if (other.obj != null) {\n" +
-        "                    return false;\n" +
-        "                }\n" +
-        "            } else if (this.obj != other.obj) {\n" +
-        "                return false;\n" +
-        "            }\n" +
-        "            return true;\n" +
-        "        }\n" +
-        "    }\n" +
-        "\n" +
-        "    public HashSet<ObjectField> nullObjectFields;\n" +
-        "\n";
+        "public class TestSuite {\n";
 
     private static class JUnitTestCase {
         private static final String INDENT = "        ";
         private final StringBuilder s; 
         private final HashMap<String, String> symbolsToVariables = new HashMap<>();
         private boolean panic = false;
-        private ClauseAssume clauseLength = null;
 
         JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) 
         throws FrozenStateException {
             this.s = s;
             appendMethodDeclaration(finalState, testCounter);
-            appendInputsInitialization(finalState, model, testCounter);
+            appendInputsInitialization(finalState, model);
             appendInvocationOfMethodUnderTest(initialState, finalState);
             appendAssert(initialState, finalState);
             appendMethodEnd(finalState, testCounter);
@@ -258,13 +126,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append("() {\n");
         }
 
-        private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter)
+        private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model)
                 throws FrozenStateException {
             if (this.panic) {
                 return;
             }
-            /*this.s.append(INDENT);
-            this.s.append("this.nullObjectFields = new HashSet<>();\n");*/
             final Collection<Clause> pathCondition = finalState.getPathCondition();
             for (Iterator<Clause> iterator = pathCondition.iterator(); iterator.hasNext(); ) {
                 final Clause clause = iterator.next();
@@ -327,7 +193,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                             this.s.append(javaClass(finalState.getObject(returnedRef).getType().getClassName()));
                         }
                     }
-                    this.s.append(" __returnedValue = ");
+                    this.s.append(" returnedValue = ");
                 }
                 final String methodName = initialState.getRootMethodSignature().getName();
                 this.s.append(methodName);
@@ -392,12 +258,30 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     }
                 } else if (isPrimitive(returnType)) {
                     if (returnedValue instanceof Simplex) {
-                        if (returnType == Type.BYTE) {
-                            this.s.append("(byte) ");
-                        } else if (returnType == Type.CHAR) {
-                            this.s.append("(char) ");
-                        } else if (returnType == Type.SHORT) {
-                            this.s.append("(short) ");
+                        switch (returnType) {
+                            case Type.BYTE:
+                                this.s.append("(Byte) ");
+                                break;
+                            case Type.CHAR:
+                                this.s.append("(Character) ");
+                                break;
+                            case Type.SHORT:
+                                this.s.append("(Short) ");
+                                break;
+                            case Type.INT:
+                                this.s.append("(Integer) ");
+                                break;
+                            case Type.FLOAT:
+                                this.s.append("(Float) ");
+                                break;
+                            case Type.LONG:
+                                this.s.append("(Long) ");
+                                break;
+                            case Type.DOUBLE:
+                                this.s.append("(Double) ");
+                                break;
+                            default:
+                                break;
                         }
                     }
                     if (returnedValue instanceof Expression) {
@@ -447,29 +331,25 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             final String instantiationStmt;
             if (isArray(type)) {
                 //the next clause predicates on the array length 
-                this.clauseLength = (ClauseAssume) iterator.next();
-                final Simplex length = arrayLength(this.clauseLength, model);
-                instantiationStmt = "newArray(\"" + javaType(getArrayMemberType(type)) + "\", " + length.toString() + ")";
+                ClauseAssume clauseLength = (ClauseAssume) iterator.next();
+                final Simplex length = arrayLength(clauseLength, model);
+                instantiationStmt = "new " + javaType(getArrayMemberType(type).substring(getArrayMemberType(type).lastIndexOf(".") + 1)) + " [" + length.toString() + "]";
             } else {
-                instantiationStmt = "newInstance(\"" + javaType(type) + "\")";
+                instantiationStmt = "new " + javaType(type.substring(type.lastIndexOf(".") + 1)) + "()";
             }
-            final String className = javaClass(type);
+            final String className = javaClass(type.substring(type.lastIndexOf("$") + 1));
             if (hasMemberAccessor(var)){
                 setByReflection(var, instantiationStmt);
             } else if (hasArrayAccessor(var)) {
                 this.s.append(var);
-                this.s.append(" = (");
-                this.s.append(className);
-                this.s.append(") ");
+                this.s.append(" = ");
                 this.s.append(instantiationStmt);
                 this.s.append(";");
             } else {
                 this.s.append(className);
                 this.s.append(' ');
                 this.s.append(var);
-                this.s.append(" = (");
-                this.s.append(className);
-                this.s.append(") ");
+                this.s.append(" = ");
                 this.s.append(instantiationStmt);
                 this.s.append(";");
             }
@@ -485,18 +365,10 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(" = null;");
             } else {
                 final String type = javaClass(symbol.getStaticType());
-                this.s.append(type);
+                this.s.append(type.substring(type.lastIndexOf("$") + 1));
                 this.s.append(' ');
                 this.s.append(var);
                 this.s.append(" = null;");
-            }
-            if (hasMemberAccessor(var)) {
-                final int splitPoint = var.lastIndexOf('.');
-                this.s.append("this.nullObjectFields.add(new ObjectField(");
-                this.s.append(getValue(var.substring(0, splitPoint)));
-                this.s.append(", \"");
-                this.s.append(var.substring(splitPoint + 1));
-                this.s.append("\"));");
             }
         }
 
@@ -514,7 +386,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(';'); 
             } else {
                 final String type = javaClass(getTypeOfObjectInHeap(finalState, heapPosition));
-                this.s.append(type);
+                this.s.append(type.substring(type.lastIndexOf(".") + 1));
                 this.s.append(' '); 
                 this.s.append(var); 
                 this.s.append(" = "); 
@@ -616,30 +488,30 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private String replaceAccessorsWithGetters(String container, String accessExpression) {
-            String a = container;
+            StringBuilder a = new StringBuilder(container);
             String s = accessExpression;    
             if (hasMemberAccessor(s)) {
                 s = s.substring(s.indexOf('.') + 1);
             } else { 
-                return a;
+                return a.toString();
             }
 
             while (s != null && s.length() > 0) {
                 if (hasMemberAccessor(s)){
                     int i = s.indexOf('.');
-                    a = a + ".get(\"" + s.substring(0, i) + "\")";
+                    a.append(".get(\"").append(s, 0, i).append("\")");
                     s = s.substring(i + 1);
                 } else {
-                    a = a + ".get(\"" + s + "\")";
+                    a.append(".get(\"").append(s).append("\")");
                     s = null;
                 }            
             }
-            return a;
+            return a.toString();
         }
 
         private String getValue(String accessExpression) {
             if (hasMemberAccessor(accessExpression)) {
-                final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
+                final String container = accessExpression.substring(0, accessExpression.indexOf('.'));
                 final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression);
                 return accessExpressionWithGetters + ".getValue()" ;
             } else {
@@ -648,9 +520,9 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private void setByReflection(String accessExpression, String value) {
-            final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
+            final String container = accessExpression.substring(0, accessExpression.indexOf('.'));
             final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression.substring(0, accessExpression.lastIndexOf('.')));
-            final String fieldToSet = accessExpression.substring(accessExpression.lastIndexOf('.') + 1);
+            final String fieldToSet = accessExpression.substring(accessExpression.lastIndexOf('$') + 1);
             this.s.append(accessExpressionWithGetters);
             this.s.append(".set(\"");
             this.s.append(fieldToSet);
@@ -737,22 +609,39 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             final String var = getVariableFor(symbol);
             if (hasMemberAccessor(var)) {
-                if (symbol.getType() == Type.BOOLEAN) {
-                    setByReflection(var, "(" + value.toString() + " != 0)");
-                } else if (symbol.getType() == Type.BYTE) {
-                    setByReflection(var, "(byte) " + value.toString());
-                } else if (symbol.getType() == Type.CHAR) {
-                    setByReflection(var, "(char) " + value.toString());
-                } else if (symbol.getType() == Type.SHORT) {
-                    setByReflection(var, "(short) " + value.toString());
-                } else {
-                    setByReflection(var, value.toString());
+                switch (symbol.getType()){
+                    case Type.BOOLEAN:
+                        setByReflection(var, "(" + value.toString() + " != 0)");
+                        break;
+                    case Type.BYTE:
+                        setByReflection(var, "(Byte) " + value.toString());
+                        break;
+                    case Type.CHAR:
+                        setByReflection(var, "(Character) " + value.toString());
+                        break;
+                    case Type.SHORT:
+                        setByReflection(var, "(Short) " + value.toString());
+                        break;
+                    case Type.INT:
+                        setByReflection(var, "(Integer) " + value.toString());
+                        break;
+                    case Type.FLOAT:
+                        setByReflection(var, "(Float) " + value.toString());
+                        break;
+                    case Type.LONG:
+                        setByReflection(var, "(Long) " + value.toString());
+                        break;
+                    case Type.DOUBLE:
+                        setByReflection(var, "(Double) " + value.toString());
+                        break;
+                    default:
+                        setByReflection(var, value.toString());
+                        break;
                 }
             } else {
-                //TODO floating point values
                 this.s.append("long ");
                 this.s.append(var);
-                this.s.append(" = " + value.toString() + ";");
+                this.s.append(" = ").append(value.toString()).append(";");
             }
         }
     }
