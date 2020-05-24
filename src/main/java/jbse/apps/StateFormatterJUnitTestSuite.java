@@ -10,13 +10,7 @@ import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Supplier;
 
 import jbse.common.Type;
@@ -116,14 +110,17 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             final Reference exception = finalState.getStuckException();
             if (exception == null) {
                 this.s.append("    @Test\n");
+                this.s.append("    public void test");
+                this.s.append(testCounter);
             } else {
+                final String exceptionTest = javaClass(finalState.getObject(exception).getType().getClassName());
                 this.s.append("    @Test(expected=");
-                this.s.append(javaClass(finalState.getObject(exception).getType().getClassName()));
+                this.s.append(exceptionTest);
                 this.s.append(".class)\n");
+                this.s.append("    public void test");
+                this.s.append(exceptionTest.substring(exceptionTest.lastIndexOf(".") + 1));
             }
-            this.s.append("    public void test");
-            this.s.append(testCounter);
-            this.s.append("() {\n");
+            this.s.append("() {\n").append('\n');
         }
 
         private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model)
@@ -161,7 +158,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     final Primitive p = clauseAssume.getCondition();
                     addPrimitiveSymbolAssignments(p, model);
                 }
-                this.s.append('\n');
+                this.s.append("\n");
             }
         }
 
@@ -176,22 +173,41 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append(INDENT);
             try {
                 if (mustCheckReturnedValue) {
-                    final char returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
-                    if (returnType == Type.CHAR) {
-                        this.s.append("char");
-                    } else if (returnType == Type.BOOLEAN) {
-                        this.s.append("boolean");
-                    } else if (isPrimitiveIntegral(returnType)) {
-                        this.s.append("long");
-                    } else if (isPrimitiveFloating(returnType)) {
-                        this.s.append("double");
-                    } else {
-                        final Reference returnedRef = (Reference) returnedValue;
-                        if (finalState.isNull(returnedRef)) {
-                            this.s.append("java.lang.Object");
-                        } else {
-                            this.s.append(javaClass(finalState.getObject(returnedRef).getType().getClassName()));
-                        }
+                    final char returnType = Objects.requireNonNull(splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor())).charAt(0);
+                    switch (returnType){
+                        case Type.BOOLEAN:
+                            this.s.append("boolean");
+                            break;
+                        case Type.BYTE:
+                            this.s.append("byte");
+                            break;
+                        case Type.CHAR:
+                            this.s.append("char");
+                            break;
+                        case Type.SHORT:
+                            this.s.append("short");
+                            break;
+                        case Type.INT:
+                            this.s.append("int");
+                            break;
+                        case Type.FLOAT:
+                            this.s.append("float");
+                            break;
+                        case Type.LONG:
+                            this.s.append("long");
+                            break;
+                        case Type.DOUBLE:
+                            this.s.append("double");
+                            break;
+                        default:
+                            final Reference returnedRef = (Reference) returnedValue;
+                            if (finalState.isNull(returnedRef)) {
+                                this.s.append("java.lang.Object");
+                            } else {
+                                final String javaClazz = javaClass(finalState.getObject(returnedRef).getType().getClassName());
+                                this.s.append(javaClazz.substring(javaClazz.lastIndexOf('.') + 1));
+                            }
+                            break;
                     }
                     this.s.append(" returnedValue = ");
                 }
@@ -244,7 +260,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("assertTrue(returnedValue == ");
                 final char returnType;
                 try {
-                    returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
+                    returnType = Objects.requireNonNull(splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor())).charAt(0);
                 } catch (ThreadStackEmptyException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
@@ -260,25 +276,25 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     if (returnedValue instanceof Simplex) {
                         switch (returnType) {
                             case Type.BYTE:
-                                this.s.append("(Byte) ");
+                                this.s.append("(byte) ");
                                 break;
                             case Type.CHAR:
-                                this.s.append("(Character) ");
+                                this.s.append("(char) ");
                                 break;
                             case Type.SHORT:
-                                this.s.append("(Short) ");
+                                this.s.append("(short) ");
                                 break;
                             case Type.INT:
-                                this.s.append("(Integer) ");
+                                this.s.append("(int) ");
                                 break;
                             case Type.FLOAT:
-                                this.s.append("(Float) ");
+                                this.s.append("(float) ");
                                 break;
                             case Type.LONG:
-                                this.s.append("(Long) ");
+                                this.s.append("(long) ");
                                 break;
                             case Type.DOUBLE:
-                                this.s.append("(Double) ");
+                                this.s.append("(double) ");
                                 break;
                             default:
                                 break;
@@ -329,29 +345,32 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             final String var = getVariableFor(symbol);
             final String type = getTypeOfObjectInHeap(finalState, heapPosition);
             final String instantiationStmt;
-            if (isArray(type)) {
-                //the next clause predicates on the array length 
-                ClauseAssume clauseLength = (ClauseAssume) iterator.next();
-                final Simplex length = arrayLength(clauseLength, model);
-                instantiationStmt = "new " + javaType(getArrayMemberType(type).substring(getArrayMemberType(type).lastIndexOf(".") + 1)) + " [" + length.toString() + "]";
-            } else {
-                instantiationStmt = "new " + javaType(type.substring(type.lastIndexOf(".") + 1)) + "()";
-            }
-            final String className = javaClass(type.substring(type.lastIndexOf("$") + 1));
-            if (hasMemberAccessor(var)){
-                setByReflection(var, instantiationStmt);
-            } else if (hasArrayAccessor(var)) {
-                this.s.append(var);
-                this.s.append(" = ");
-                this.s.append(instantiationStmt);
-                this.s.append(";");
-            } else {
-                this.s.append(className);
-                this.s.append(' ');
-                this.s.append(var);
-                this.s.append(" = ");
-                this.s.append(instantiationStmt);
-                this.s.append(";");
+            if (!"this".equals(var)) {
+                if (isArray(type)) {
+                    //the next clause predicates on the array length
+                    ClauseAssume clauseLength = (ClauseAssume) iterator.next();
+                    final Simplex length = arrayLength(clauseLength, model);
+                    instantiationStmt = "new " + javaType(Objects.requireNonNull(getArrayMemberType(type)).
+                            substring(Objects.requireNonNull(getArrayMemberType(type)).lastIndexOf(".") + 1)) + " [" + length.toString() + "]";
+                } else {
+                    instantiationStmt = "new " + javaType(type.substring(type.lastIndexOf(".") + 1)) + "()";
+                }
+                final String className = javaClass(type.substring(type.lastIndexOf("$") + 1));
+                if (hasMemberAccessor(var)){
+                    setByReflection(var, instantiationStmt);
+                } else if (hasArrayAccessor(var)) {
+                    this.s.append(var);
+                    this.s.append(" = ");
+                    this.s.append(instantiationStmt);
+                    this.s.append(";");
+                } else {
+                    this.s.append(className);
+                    this.s.append(' ');
+                    this.s.append(var);
+                    this.s.append(" = ");
+                    this.s.append(instantiationStmt);
+                    this.s.append(";");
+                }
             }
         }
 
@@ -614,25 +633,25 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                         setByReflection(var, "(" + value.toString() + " != 0)");
                         break;
                     case Type.BYTE:
-                        setByReflection(var, "(Byte) " + value.toString());
+                        setByReflection(var, "(byte) " + value.toString());
                         break;
                     case Type.CHAR:
-                        setByReflection(var, "(Character) " + value.toString());
+                        setByReflection(var, "(char) " + value.toString());
                         break;
                     case Type.SHORT:
-                        setByReflection(var, "(Short) " + value.toString());
+                        setByReflection(var, "(short) " + value.toString());
                         break;
                     case Type.INT:
-                        setByReflection(var, "(Integer) " + value.toString());
+                        setByReflection(var, "(int) " + value.toString());
                         break;
                     case Type.FLOAT:
-                        setByReflection(var, "(Float) " + value.toString());
+                        setByReflection(var, "(float) " + value.toString());
                         break;
                     case Type.LONG:
-                        setByReflection(var, "(Long) " + value.toString());
+                        setByReflection(var, "(long) " + value.toString());
                         break;
                     case Type.DOUBLE:
-                        setByReflection(var, "(Double) " + value.toString());
+                        setByReflection(var, "(double) " + value.toString());
                         break;
                     default:
                         setByReflection(var, value.toString());

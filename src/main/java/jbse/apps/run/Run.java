@@ -438,7 +438,7 @@ public final class Run {
                 }
 
                 //displays path end message and updates stats
-                final CounterKind counterKind;
+                /*final CounterKind counterKind;
                 switch (this.pathKind) {
                     case SAFE:
                         ++Run.this.pathsSafe;
@@ -472,7 +472,7 @@ public final class Run {
                 }
                 if (Run.this.parameters.getDoConcretization()) {
                     checkFinalStateIsConcretizable(counterKind);
-                }
+                }*/
 
             } catch (CannotRefineException | FrozenStateException e) {
                 throw new UnexpectedInternalException(e);
@@ -563,11 +563,11 @@ public final class Run {
                     ++Run.this.pathsConcretizableUnsafe;
                 }
             }
-            if (Run.this.parameters.getShowWarnings()) {
+            /*if (Run.this.parameters.getShowWarnings()) {
                 final State currentState = Run.this.engine.getCurrentState();
                 Run.this.log(currentState.getBranchIdentifier() +
                         (concretizable ? MSG_PATH_CONCRETIZABLE : MSG_PATH_NOT_CONCRETIZABLE));
-            }
+            }*/
         }
     }
 
@@ -587,9 +587,9 @@ public final class Run {
         }
 
         // prints feedback
-        if (this.parameters.getShowInfo()) {
+        /*if (this.parameters.getShowInfo()) {
             log(MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
-        }
+        }*/
 
         // runs
         try {
@@ -609,10 +609,10 @@ public final class Run {
         }
 
         // prints statistics
-        if (this.parameters.getShowInfo()) {
+        /*if (this.parameters.getShowInfo()) {
             log(MSG_END + new Date() + ".");
             printFinalStats();
-        }
+        }*/
 
         // closes and returns the error code
         return close();
@@ -688,9 +688,9 @@ public final class Run {
         setStreams();
 
         // prints a welcome message
-        if (this.parameters.getShowInfo()) {
+        /*if (this.parameters.getShowInfo()) {
             log(MSG_WELCOME_TXT);
-        }
+        }*/
 
         //builds
         try {
@@ -880,7 +880,7 @@ public final class Run {
             final Path path = this.parameters.getExternalDecisionProcedurePath();
 
             //prints some feedback
-            if (this.parameters.getShowInfo()) {
+            /*if (this.parameters.getShowInfo()) {
                 if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
                     log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
                 } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
@@ -890,7 +890,7 @@ public final class Run {
                 } else {
                     log(MSG_DECISION_INTERACTIVE);
                 }
-            }
+            }*/
 
             //initializes cores
             final boolean needHeapCheck = (this.parameters.getUseConservativeRepOks() || this.parameters.getDoConcretization());
@@ -987,9 +987,6 @@ public final class Run {
             //finally guidance
             if (this.parameters.isGuided()) {
                 final RunnerParameters guidanceDriverParameters = this.parameters.getGuidanceDriverParameters(calc);
-                if (this.parameters.getShowInfo()) {
-                    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
-                }
                 try {
                     if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
                         this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
@@ -1066,7 +1063,7 @@ public final class Run {
     /**
      * Prints statistics.
      */
-    private void printFinalStats() {
+    /*private void printFinalStats() {
         final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
         final long elapsedTimePreInitialPhase = (this.timestampPreInitialPhaseEnd - this.runner.getStartTime());
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
@@ -1109,7 +1106,7 @@ public final class Run {
                 (this.timer == null ?
                         "." :
                         ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."));
-    }
+    }*/
 
     /**
      * Closes this {@link Run} object.
@@ -1162,87 +1159,6 @@ public final class Run {
     }
 
     // Private constants.
-
-    /** Message: welcome. */
-    private static final String MSG_WELCOME_TXT = "//This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";
-
-    /** Message: trying to connect to Z3. */
-    private static final String MSG_TRY_Z3 = "//Connecting to Z3 at ";
-
-    /** Message: trying to connect to CVC4. */
-    private static final String MSG_TRY_CVC4 = "Connecting to CVC4 at ";
-
-    /** Message: trying to initialize guidance. */
-    private static final String MSG_TRY_GUIDANCE = "Initializing guidance by driver method ";
-
-    /** Message: start of symbolic execution. */
-    private static final String MSG_START = "//Starting symbolic execution of method ";
-
-    /** Message: the path is safe. */
-    private static final String MSG_PATH_SAFE = " path is safe.";
-
-    /** Message: the path is unsafe (violated an assertion). */
-    private static final String MSG_PATH_UNSAFE = " path violates an assertion.";
-
-    /** Message: the path is contradictory/irrelevant (violated an assumption). */
-    private static final String MSG_PATH_CONTRADICTORY = " path violates an assumption.";
-
-    /** Message: the path is concretizable. */
-    private static final String MSG_PATH_CONCRETIZABLE = " path has a concretizable final state.";
-
-    /** Message: the path is not concretizable. */
-    private static final String MSG_PATH_NOT_CONCRETIZABLE = " path has not a concretizable final state.";
-
-    /** Message: end of symbolic execution. */
-    private static final String MSG_END = "//Symbolic execution finished at ";
-
-    /** Message: elapsed time. */
-    private static final String MSG_END_ELAPSED = "//Elapsed time: ";
-
-    /** Message: elapsed time during the pre-initial phase. */
-    private static final String MSG_END_ELAPSED_PREINITIAL = "Elapsed pre-initial phase time: ";
-
-    /** Message: elapsed time in the concretization. */
-    private static final String MSG_END_ELAPSED_CONCRETIZATION = "Elapsed concretization time: ";
-
-    /** Message: elapsed time in the decision procedure. */
-    private static final String MSG_END_DECISION = "Elapsed time in decision procedure: ";
-
-    /** Message: average speed. */
-    private static final String MSG_END_SPEED = "Average speed: ";
-
-    /** Message: average speed. */
-    private static final String MSG_END_SPEED_POSTINITIAL = "Average post-initial phase speed: ";
-
-    /** Message: analyzed states. */
-    private static final String MSG_END_STATES = "//Analyzed states: ";
-
-    /** Message: analyzed pre-initial states. */
-    private static final String MSG_END_STATES_PREINITIAL = "Analyzed pre-initial states: ";
-
-    /** Message: total paths. */
-    private static final String MSG_END_PATHS_TOT = "Analyzed paths: ";
-
-    /** Message: total paths violating assumptions. */
-    private static final String MSG_END_PATHS_VIOLATING_ASSUMPTION = "Violating assumptions: ";
-
-    /** Message: total unmanageable paths. */
-    private static final String MSG_END_PATHS_UNMANAGEABLE = "Unmanageable: ";
-
-    /** Message: total safe paths. */
-    private static final String MSG_END_PATHS_SAFE = "Safe: ";
-
-    /** Message: total unsafe paths. */
-    private static final String MSG_END_PATHS_UNSAFE = "Unsafe: ";
-
-    /** Message: total paths. */
-    private static final String MSG_END_PATHS_OUT_OF_SCOPE = "Out of scope: ";
-
-    /** Message: will consider all the clauses satisfiable. */
-    private static final String MSG_DECISION_BASIC = "Will use a noninteractive, always-sat decision procedure when necessary.";
-
-    /** Message: will ask to the user whether clauses are satisfiable or not. */
-    private static final String MSG_DECISION_INTERACTIVE = "Will query via console about the satisfiability of a clause when necessary.";
 
     /** Warning: unrecognizable signature. */
     private static final String WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE = "Unrecognizable variable will not be observed: ";
