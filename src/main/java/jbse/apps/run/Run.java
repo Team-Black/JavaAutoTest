@@ -2,13 +2,12 @@ package jbse.apps.run;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Map;
 
-import jbse.JBSE;
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MetaUnsupportedException;
@@ -23,7 +22,6 @@ import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterPath;
 import jbse.apps.Timer;
-import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
 import jbse.apps.run.RunParameters.DecisionProcedureType;
 import jbse.apps.run.RunParameters.GuidanceType;
@@ -230,7 +228,7 @@ public final class Run {
         }
 
         @Override
-        public boolean atStart() {
+        public boolean atStart() throws ThreadStackEmptyException {
             Run.this.emitPrologue();
 
             //enables or disables printing
@@ -1032,9 +1030,11 @@ public final class Run {
     /**
      * Emits the prologue of the symbolic execution.
      */
-    private void emitPrologue() {
+    private void emitPrologue() throws ThreadStackEmptyException {
         this.formatter.cleanup();
-        this.formatter.formatPrologue();
+        final String className = this.parameters.getMethodSignature().getClassName();
+        final String methodName = this.parameters.getMethodSignature().getName();
+        this.formatter.formatPrologue(className.substring(className.lastIndexOf('/') + 1) + '_' + methodName);
         outNoBreak(this.formatter.emit());
     }
 

@@ -48,7 +48,7 @@ public class Runner {
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
          */
-        public boolean atStart() { return false; }
+        public boolean atStart() throws ThreadStackEmptyException { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method 
@@ -509,10 +509,10 @@ public class Runner {
      * @throws FailureException as in {@link Engine#step()} 
      * @throws NonexistingObservedVariablesException as in {@link Engine#step()} 
      */
-    public void run() 
-    throws CannotBacktrackException, CannotManageStateException, 
-    ClasspathException, ThreadStackEmptyException, 
-    ContradictionException, DecisionException, EngineStuckException, 
+    public void run()
+    throws CannotBacktrackException, CannotManageStateException,
+    ClasspathException, ThreadStackEmptyException,
+    ContradictionException, DecisionException, EngineStuckException,
     FailureException, NonexistingObservedVariablesException  {
         this.startTime = System.currentTimeMillis();
 
@@ -523,10 +523,10 @@ public class Runner {
         }
     }
 
-    private void doRun() 
-    throws CannotBacktrackException, CannotManageStateException, 
-    ClasspathException, ThreadStackEmptyException, 
-    ContradictionException, DecisionException, EngineStuckException, 
+    private void doRun()
+    throws CannotBacktrackException, CannotManageStateException,
+    ClasspathException, ThreadStackEmptyException,
+    ContradictionException, DecisionException, EngineStuckException,
     FailureException, NonexistingObservedVariablesException  {
         if (this.actions.atStart()) { return; }
         //performs the symbolic execution loop

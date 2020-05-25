@@ -54,8 +54,16 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     }
 
     @Override
-    public void formatPrologue() {
-        this.output.append(PROLOGUE);
+    public void formatPrologue(final String clazz) {
+        this.output.append("import org.junit.Test;\n")
+                .append("import static org.junit.Assert.*;\n")
+                .append("import java.lang.*;\n")
+                .append("import java.util.*;\n").append('\n')
+                .append("public class ")
+                .append(clazz).append("Test {\n");
+
+        /*this.initialStateSupplier.get().getRootClass().getClassName();
+        this.output.append(PROLOGUE);*/
     }
 
     @Override
@@ -81,11 +89,6 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     public void cleanup() {
         this.output = new StringBuilder();
     }
-
-    private static final String PROLOGUE =
-        "import org.junit.Test;\n" +
-        "\n" +
-        "public class TestSuite {\n";
 
     private static class JUnitTestCase {
         private static final String INDENT = "        ";

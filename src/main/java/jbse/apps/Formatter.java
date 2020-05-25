@@ -1,6 +1,7 @@
 package jbse.apps;
 
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * A formatter for symbolic execution.
@@ -11,7 +12,7 @@ public interface Formatter {
     /** 
      * Formats a (possible) prologue. 
      */
-    default void formatPrologue() { }
+    default void formatPrologue(final String clazz) throws ThreadStackEmptyException { }
 
     /**
      * Formats a {@link State}.
