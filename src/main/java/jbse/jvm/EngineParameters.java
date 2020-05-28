@@ -178,7 +178,7 @@ public final class EngineParameters implements Cloneable {
      * {@code initialState}'s bootstrap path when 
      * {@code initialState != null}. 
      */
-    private Path javaHome = Paths.get(System.getProperty("java.home", ""));
+    private Path javaHome;
     
     /** 
      * The extensions directories; overridden by {@code initialState}'s 
@@ -252,7 +252,9 @@ public final class EngineParameters implements Cloneable {
     /**
      * Constructor.
      */
-    public EngineParameters() { }
+    public EngineParameters(final Path javaHome) {
+        this.javaHome = javaHome;
+    }
 
     /**
      * Sets the decision procedure to be used during symbolic execution.

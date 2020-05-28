@@ -67,8 +67,8 @@ public final class RunnerParameters implements Cloneable {
     /** 
      * Constructor. 
      */
-    public RunnerParameters() {
-        this.engineParameters = new EngineParameters();
+    public RunnerParameters(final Path javaHome) {
+        this.engineParameters = new EngineParameters(javaHome);
     }
 
     /**

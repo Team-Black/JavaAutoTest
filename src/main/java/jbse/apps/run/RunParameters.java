@@ -439,8 +439,8 @@ public final class RunParameters implements Cloneable {
     /**
      * Constructor.
      */
-    public RunParameters() {
-        this.runnerParameters = new RunnerParameters();
+    public RunParameters(final Path javaHome) {
+        this.runnerParameters = new RunnerParameters(javaHome);
     }
 
     /**
